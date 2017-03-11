@@ -22,8 +22,8 @@ defmodule OAuth2.Mixfile do
   end
 
   def application do
-    [applications: [:logger, :hackney],
-     env: [serializers: %{"application/json" => Poison}]]
+    [mod: {OAuth2.Application, []},
+     applications: [:logger, :hackney]]
   end
 
   defp deps do

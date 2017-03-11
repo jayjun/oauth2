@@ -1,50 +1,77 @@
 defmodule OAuth2.Serializer do
   @moduledoc false
 
-  require Logger
+  @callback encode!(map) :: binary
+  @callback decode!(binary) :: map
 
-  defmodule NullSerializer do
-    @moduledoc false
-
-    @doc false
-    def decode!(content), do: content
-
-    @doc false
-    def encode!(content), do: content
+  @spec get(binary) :: atom
+  def get(mime_type) do
+    case :ets.lookup(__MODULE__, mime_type) do
+      [] ->
+        maybe_warn_missing_serializer(mime_type)
+        OAuth2.Serializer.Null
+      [{_, module}] ->
+        module
+    end
   end
 
-  def decode!(content, type), do: serializer(type).decode!(content)
+  @doc """
+  Register a serialization module for a given mime type.
 
-  def encode!(content, type), do: serializer(type).encode!(content)
+  ## Example
 
-  defp serializer(type) do
-    serializer = Map.get(configured_serializers(), type, NullSerializer)
-    warn_missing_serializer = Application.get_env(:oauth2, :warn_missing_serializer, true)
+      iex> OAuth2.Serializer.register("application/json", Poison)
+      :ok
+      iex> OAuth2.Serializer.get("application/json")
+      Poison
+  """
+  @spec register(binary, atom) :: :ok
+  def register(mime_type, module) do
+    :ets.insert(__MODULE__, {mime_type, module})
+    :ok
+  end
 
-    if serializer == NullSerializer && warn_missing_serializer do
+  @doc """
+  Un-register a serialization module for a given mime type.
+
+  ## Example
+
+      iex> OAuth2.Serializer.unregister("application/json")
+      :ok
+      iex> OAuth2.Serializer.get("application/json")
+      OAuth2.Serializer.Null
+  """
+  @spec unregister(binary) :: :ok
+  def unregister(mime_type) do
+    :ets.delete(__MODULE__, mime_type)
+    :ok
+  end
+
+  @spec decode!(binary, binary) :: map
+  def decode!(data, type),
+    do: get(type).decode!(data)
+
+  @spec decode!(map, binary) :: binary
+  def encode!(data, type),
+    do: get(type).encode!(data)
+
+  defp maybe_warn_missing_serializer(type) do
+    if Application.get_env(:oauth2, :warn_missing_serializer, true) do
+      require Logger
+
       Logger.warn """
 
       A serializer was not configured for content-type '#{type}'.
 
-      To remove this warning for this content-type, add the following to your `config.exs` file:
+      To remove this warning for this content-type, consider registering a serializer:
 
-          config :oauth2,
-            serializers: %{
-              "#{type}" => MySerializer
-            }
+          OAuth2.register_serializer("#{type}", MySerializer)
 
-      To remove this warning entirely, add the following to you `config.exs` file:
+      To remove this warning entirely, add the following to your `config.exs` file:
 
           config :oauth2,
             warn_missing_serializer: false
       """
     end
-
-    serializer
-  end
-
-  defp configured_serializers do
-    Application.get_env(:oauth2, :serializers) ||
-      raise("Missing serializers configuration! Make sure oauth2 app is added to mix application list")
   end
 end

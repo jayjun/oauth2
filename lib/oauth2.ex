@@ -43,4 +43,32 @@ defmodule OAuth2 do
 
       resource = OAuth2.Client.get!(client, "/api/resource").body
   """
+
+  @doc """
+  Register a serialization module for a given mime type.
+
+  ## Example
+
+      iex> OAuth2.register_serializer("application/json", Poison)
+      :ok
+      iex> OAuth2.Serializer.get("application/json")
+      Poison
+  """
+  @spec register_serializer(binary, atom) :: :ok
+  def register_serializer(mime, module),
+    do: OAuth2.Serializer.register(mime, module)
+
+  @doc """
+  Un-register a serialization module for a given mime type.
+
+  ## Example
+
+      iex> OAuth2.unregister_serializer("application/json")
+      :ok
+      iex> OAuth2.Serializer.get("application/json")
+      OAuth2.Serializer.Null
+  """
+  @spec unregister_serializer(binary) :: :ok
+  def unregister_serializer(mime),
+    do: OAuth2.Serializer.unregister(mime)
 end
