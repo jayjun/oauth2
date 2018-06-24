@@ -4,9 +4,11 @@
 
 ### Backward Incompatible Changes
 
+- There is no longer a default serializer for `application/json`. Please make
+  sure to register a serializer with `OAuth2.register_serializer/2`.
 - Serializers are now registered via `OAuth2.register_serializer/2`.
-  This change allows wrapping applications to provide default serializers
-  without requiring the user to manually configure a serializer.
+  This change allows applications wrapping `oauth2` a way to provide default
+  serializers without requiring the user to manually configure a serializer.
 
 ## v0.9.4 (2018-10-18)
 
