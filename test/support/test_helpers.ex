@@ -34,7 +34,7 @@ defmodule OAuth2.TestHelpers do
   defp parse_req_body(conn) do
     opts = [parsers: [:urlencoded, :json],
             pass: ["*/*"],
-            json_decoder: Poison]
+            json_decoder: Jason]
     Plug.Parsers.call(conn, Plug.Parsers.init(opts))
   end
 
@@ -55,7 +55,7 @@ defmodule OAuth2.TestHelpers do
   def json(conn, status, body \\ []) do
     conn
     |> put_resp_header("content-type", "application/json")
-    |> send_resp(status, Poison.encode!(body))
+    |> send_resp(status, Jason.encode!(body))
   end
 
   def build_client(opts \\ []) do

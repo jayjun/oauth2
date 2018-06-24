@@ -11,11 +11,6 @@ defmodule OAuth2.SerializerTest do
     def encode!(_), do: "encode_ok"
   end
 
-  test "has default json serializer" do
-    OAuth2.register_serializer(@json_mime, Poison)
-    assert %{"foo" => 1} == Serializer.decode!(~s|{"foo": 1}|, @json_mime)
-  end
-
   test "accepts serializer override" do
     OAuth2.register_serializer(@json_mime, TestSerializer)
 

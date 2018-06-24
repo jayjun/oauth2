@@ -49,10 +49,10 @@ defmodule OAuth2 do
 
   ## Example
 
-      iex> OAuth2.register_serializer("application/json", Poison)
+      iex> OAuth2.register_serializer("application/json", Jason)
       :ok
       iex> OAuth2.Serializer.get("application/json")
-      Poison
+      Jason
   """
   @spec register_serializer(binary, atom) :: :ok
   def register_serializer(mime, module),
