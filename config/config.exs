@@ -1,6 +1,6 @@
 use Mix.Config
 
-config :logger, level: :info
+config :logger, level: :debug
 
 config :oauth2,
   client_id: "0bee1126b1a1381d9cab60bcd52349484451808a", # first commit sha of this library
