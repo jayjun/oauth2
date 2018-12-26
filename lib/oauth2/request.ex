@@ -4,7 +4,7 @@ defmodule OAuth2.Request do
   require Logger
   import OAuth2.Util
 
-  alias OAuth2.{Client, Error, Response, Serializer}
+  alias OAuth2.{Client, Error, Response}
 
   @type body :: any
 
