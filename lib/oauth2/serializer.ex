@@ -24,38 +24,6 @@ defmodule OAuth2.Serializer do
     end
   end
 
-  @doc """
-  Register a serialization module for a given mime type.
-
-  ## Example
-
-      iex> OAuth2.Serializer.register("application/json", Jason)
-      :ok
-      iex> OAuth2.Serializer.get("application/json")
-      Jason
-  """
-  @spec register(binary, atom) :: :ok
-  def register(mime_type, module) do
-    :ets.insert(__MODULE__, {mime_type, module})
-    :ok
-  end
-
-  @doc """
-  Un-register a serialization module for a given mime type.
-
-  ## Example
-
-      iex> OAuth2.Serializer.unregister("application/json")
-      :ok
-      iex> OAuth2.Serializer.get("application/json")
-      OAuth2.Serializer.Null
-  """
-  @spec unregister(binary) :: :ok
-  def unregister(mime_type) do
-    :ets.delete(__MODULE__, mime_type)
-    :ok
-  end
-
   @spec decode!(binary, binary) :: map
   def decode!(data, type),
     do: get(type).decode!(data)

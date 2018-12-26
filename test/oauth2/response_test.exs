@@ -8,7 +8,7 @@ defmodule OAuth2.ResponseTest do
   test "debug response body" do
     Application.put_env(:oauth2, :debug, true)
 
-    output = capture_log(fn -> Response.new(200, [{"content-type", "text/plain"}], "hello") end)
+    output = capture_log(fn -> Response.new(%OAuth2.Client{}, 200, [{"content-type", "text/plain"}], "hello") end)
     assert output =~ ~s(OAuth2 Provider Response)
     assert output =~ ~s(body: "hello")
 
@@ -16,7 +16,7 @@ defmodule OAuth2.ResponseTest do
   end
 
   test "text/plain body passes through body" do
-    response = Response.new(200, [{"content-type", "text/plain"}], "hello")
+    response = Response.new(%OAuth2.Client{}, 200, [{"content-type", "text/plain"}], "hello")
     assert response.body == "hello"
   end
 end

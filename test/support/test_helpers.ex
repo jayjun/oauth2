@@ -62,6 +62,7 @@ defmodule OAuth2.TestHelpers do
     default_client_opts()
     |> Keyword.merge(opts)
     |> OAuth2.Client.new()
+    |> OAuth2.Client.put_serializer("application/json", Jason)
   end
 
   def tokenize_client(opts \\ [], %OAuth2.Client{} = client) do

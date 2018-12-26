@@ -17,7 +17,8 @@ defmodule OAuth2.Request do
     url = client |> process_url(url) |> process_params(opts[:params])
     headers = req_headers(client, headers) |> Enum.uniq
     content_type = content_type(headers)
-    body = encode_request_body(body, content_type)
+    serializer = Client.get_serializer(client, content_type)
+    body = encode_request_body(body, content_type, serializer)
     headers = process_request_headers(headers, content_type)
     req_opts = Keyword.merge(client.request_opts, opts)
 
@@ -36,9 +37,9 @@ defmodule OAuth2.Request do
       {:ok, ref} when is_reference(ref) ->
         {:ok, ref}
       {:ok, status, headers, ref} when is_reference(ref) ->
-        process_body(status, headers, ref)
+        process_body(client, status, headers, ref)
       {:ok, status, headers, body} when is_binary(body) ->
-        process_body(status, headers, body)
+        process_body(client, status, headers, body)
       {:error, reason} ->
         {:error, %Error{reason: reason}}
     end
@@ -80,16 +81,16 @@ defmodule OAuth2.Request do
     end
   end
 
-  defp process_body(status, headers, ref) when is_reference(ref) do
+  defp process_body(client, status, headers, ref) when is_reference(ref) do
     case :hackney.body(ref) do
       {:ok, body} ->
-        process_body(status, headers, body)
+        process_body(client, status, headers, body)
       {:error, reason} ->
         {:error, %Error{reason: reason}}
     end
   end
-  defp process_body(status, headers, body) when is_binary(body) do
-    resp = Response.new(status, headers, body)
+  defp process_body(client, status, headers, body) when is_binary(body) do
+    resp = Response.new(client, status, headers, body)
     case status do
       status when status in 200..399 ->
         {:ok, resp}
@@ -120,9 +121,32 @@ defmodule OAuth2.Request do
     end
   end
 
-  defp encode_request_body("", _), do: ""
-  defp encode_request_body([], _), do: ""
-  defp encode_request_body(body, "application/x-www-form-urlencoded"),
+  defp encode_request_body("", _, _), do: ""
+  defp encode_request_body([], _, _), do: ""
+  defp encode_request_body(body, "application/x-www-form-urlencoded", nil),
     do: URI.encode_query(body)
-  defp encode_request_body(body, type), do: Serializer.encode!(body, type)
+  defp encode_request_body(body, mime, nil) do
+    if Application.get_env(:oauth2, :warn_missing_serializer, true) do
+      require Logger
+
+      Logger.warn """
+
+      A serializer was not configured for content-type '#{mime}'.
+
+      To remove this warning for this content-type, consider registering a serializer:
+
+          OAuth2.Client.put_serializer(client, "#{mime}", MySerializer)
+
+      To remove this warning entirely, add the following to your `config.exs` file:
+
+          config :oauth2,
+            warn_missing_serializer: false
+      """
+    end
+
+    body
+  end
+  defp encode_request_body(body, _mime, serializer) do
+    serializer.encode!(body)
+  end
 end
